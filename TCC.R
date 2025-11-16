@@ -131,7 +131,7 @@ iptu23_zonas <- iptu23_zonas %>%
 iptu23_eetu <- iptu23_zonas %>%
   filter(zoneamento_grupo %in% c("EETU", "EETU Futuros"))
 
-# ====================== 3) ALVARÁS (por distrito e ano) ======================
+# ====================== 4) ALVARÁS (por distrito e ano) ======================
 alvaras_raw <- read_parquet(arq_parquet) |> clean_names()
 
 # helpers já definidos acima: pick_first(), to_num(), norm_bairro()
@@ -335,7 +335,7 @@ for (d in unique_distritos) {
 cat("Gráficos por distrito salvos em:", plots_dir, "\n")
 
 
-# ====================== 1) Parâmetros ======================
+# ====================== 7) Parâmetros ======================
 distritos_alvo_rotulo <- c(
   "Santo Amaro","Mooca","Vila Mariana","Pinheiros","Moema",
   "Lapa","Perdizes","Campo Belo","Jabaquara","Butantã",
@@ -343,7 +343,7 @@ distritos_alvo_rotulo <- c(
 )
 distritos_alvo_norm <- norm_txt(distritos_alvo_rotulo)
 
-# ====================== 2) Consumo total 2014–2024 ======================
+# ====================== 8) Consumo total 2014–2024 ======================
 # Filtra apenas distritos selecionados e soma o consumo total no período
 consumo_total_distritos <- alvaras |>
   dplyr::mutate(distrito_norm = norm_txt(distrito_norm)) |>
@@ -356,7 +356,7 @@ consumo_total_distritos <- alvaras |>
   dplyr::mutate(Distrito = stringr::str_to_title(distrito_norm)) |>
   dplyr::arrange(desc(consumo_total_m2))
 
-# ====================== 3) Gráfico estilo horizontal ======================
+# ====================== 9) Gráfico estilo horizontal ======================
 library(ggplot2)
 
 g_consumo_total <- ggplot(consumo_total_distritos, aes(
@@ -385,7 +385,7 @@ g_consumo_total <- ggplot(consumo_total_distritos, aes(
   ) +
   scale_fill_brewer(palette = "Paired")
 
-# ====================== 4) Salvar o gráfico ======================
+# ====================== 10) Salvar o gráfico ======================
 plots_dir <- file.path(out_dir, "graficos_sintese")
 if (!dir.exists(plots_dir)) dir.create(plots_dir, recursive = TRUE)
 
@@ -399,7 +399,7 @@ ggsave(
 
 cat("✅ Gráfico salvo em:", file.path(plots_dir, "consumo_total_2014_2024_por_distrito.png"), "\n")
 
-# ====================== ESTOQUE TOTAL (soma de todos os distritos) ======================
+# ====================== 11) ESTOQUE TOTAL (soma de todos os distritos) ======================
 
 # Remove geometrias e soma os estoques totais
 estoque_2014_total <- iptu14_eetu |>
@@ -416,7 +416,7 @@ estoque_2023_total <- iptu23_eetu |>
   dplyr::summarise(estoque_2023_m2 = sum(areadot, na.rm = TRUE)) |>
   dplyr::pull(estoque_2023_m2)
 
-# ====================== CRIAR SÉRIES TEMPORAIS ======================
+# ====================== 12) CRIAR SÉRIES TEMPORAIS ======================
 estoque_series <- dplyr::bind_rows(
   tibble::tibble(ano = 2014:2022, valor = estoque_2014_total, serie = "Estoque (base 2014)"),
   tibble::tibble(ano = 2023:2034, valor = estoque_2023_total, serie = "Estoque (base 2023)")
@@ -427,7 +427,7 @@ consumo_series <- consumo_anual_distrito_full |>
   dplyr::group_by(ano) |>
   dplyr::summarise(consumo_acumulado_m2 = sum(consumo_acumulado_m2, na.rm = TRUE), .groups = "drop")
 
-# ====================== GRÁFICO ======================
+# ====================== 13) GRÁFICO ======================
 g_total <- ggplot2::ggplot() +
   # linhas douradas de estoque
   ggplot2::geom_line(
@@ -521,7 +521,7 @@ ggplot(consumo_municipio, aes(x = ano, y = consumo_m2, fill = ano)) +
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
-# ====================== ESTOQUE DISPONÍVEL POR DISTRITO (ex.: 2023) ======================
+# ====================== 14) ESTOQUE DISPONÍVEL POR DISTRITO (ex.: 2023) ======================
 
 # normalizador simples (use o seu norm_txt se já estiver no script)
 norm_txt_local <- function(x){
@@ -553,7 +553,7 @@ tab_estoque23 <- estoque_2023_por_distrito |>
 total_sel <- sum(tab_estoque23$estoque_2023_m2, na.rm = TRUE)
 
 
-# ====================== GRÁFICO HORIZONTAL ======================
+# ====================== 15) GRÁFICO HORIZONTAL ======================
 
 g_estoque_2023 <- ggplot(
   tab_estoque23,
@@ -594,7 +594,7 @@ ggsave(file.path(plots_dir, "estoque_2023_por_distrito_selecionados.png"),
 
 cat("✅ Gráfico salvo em:", file.path(plots_dir, "estoque_2023_por_distrito_selecionados.png"), "\n")
 
-# ====================== Consumo Futuro ======================
+# ====================== 16) Consumo Futuro ======================
 
 # --------- 0) Helper para normalizar nome de distrito ---------
 norm_distrito <- function(x) {
@@ -696,5 +696,6 @@ tabela_esgotamento_media <- projecao_esgotamento_media %>%
   )
 
 print(tabela_esgotamento_media, n = Inf)
+
 
 
